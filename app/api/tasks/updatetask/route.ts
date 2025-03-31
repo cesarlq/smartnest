@@ -139,7 +139,6 @@ export async function PUT(request: NextRequest) {
                 content: newComment.content,
                 userId: newComment.userId,
                 createdAt: new Date(),
-                user: newComment.user
             };
             
             result = await addCommentToTask(taskId, commentData);
