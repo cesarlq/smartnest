@@ -199,11 +199,7 @@ export default function Login() {
                     <ButtonComponent>
                         {stateLoginvalidation.status == 'loading' ? 'PROCESANDO...' : 'INICIAR SESIÓN'}
                     </ButtonComponent>
-
-                    <div className='text-center'>
-                        <p>¿Olvidaste tu contraseña? <Link href="/recuperar">Recupérala aquí</Link></p>
-                    </div>
-
+                    
                     <div className={`flex items-center w-full my-2`}>
                         <div className="flex-grow h-px bg-gray-300"></div>
                         <div className="flex items-center justify-center w-5 h-5 mx-3">

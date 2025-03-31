@@ -17,18 +17,35 @@ const menuItems = [
 ];
 
 export default function MenuComponent({children}: {children:React.ReactNode}) {
+    const [isMobile, setIsMobile] = useState(false);
     const [menuVisible, setMenuVisible] = useState(true);
     const [isOpen, setisOpen] = useState(false);
     const dispatch = useAppDispatch();
     const tasksState = useAppSelector((state) => state.taskReducer.responsegetAllTask);
     const { user } = useAuth();
+
+    const pendingTasks = tasksState?.allTask?.filter((task) => task.status === 'pendiente')?.length || 0;
+    const completedTasks = tasksState?.allTask?.filter((task) => task.status === 'completada')?.length || 0;
     
     useEffect(() => {
         dispatch(GetAlltask());
     }, [dispatch]);
-    
-    const pendingTasks = tasksState?.allTask?.filter((task) => task.status === 'pendiente')?.length || 0;
-    const completedTasks = tasksState?.allTask?.filter((task) => task.status === 'completada')?.length || 0;
+
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        checkIfMobile();
+        
+        window.addEventListener('resize', checkIfMobile);
+        
+        return () => window.removeEventListener('resize', checkIfMobile);
+    }, []);
+
+    useEffect(() => {
+        setMenuVisible(!isMobile);
+    }, [isMobile]);
     
     console.log('Usuario del contexto:', user);
     const userName = user?.name || 'Usuario';
@@ -45,6 +62,12 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
     const closeModal =() =>{
         setisOpen(false);
     }
+
+    const handleOutsideClick = () => {
+        if (isMobile && menuVisible) {
+            setMenuVisible(false);
+        }
+    };
     
 
     return (
@@ -81,6 +104,13 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
             </header>
 
             <div className="flex flex-1 overflow-hidden">
+
+                {isMobile && menuVisible && (
+                    <div 
+                        className="fixed inset-0 bg-black bg-opacity-30 z-10"
+                        onClick={handleOutsideClick}
+                    ></div>
+                )}
                 
                 <div 
                     className={`

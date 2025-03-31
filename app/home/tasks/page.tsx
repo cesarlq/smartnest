@@ -7,7 +7,7 @@ import SelectComponent from '@/app/components/common/selectComponent';
 import TextFieldAdornmentComponent from '@/app/components/common/textFieldAdornmentComponent';
 import StatusChipComponent from '@/app/components/common/statusChipComponent';
 import CheckboxComponent from '@/app/components/common/checkboxComponent';
-import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
+import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, useMediaQuery } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
 import { addCommment, DeleteSubTask, DeleteTask, EditSubTask, GetAlltask, PutAddSubTask, subTaskStatusChange, taskStatusChange } from '@/app/lib/redux/thunks/task.thunk';
 import { SubTask, User, Comment } from '@/app/lib/interfaces/taskInterface';
@@ -40,6 +40,8 @@ export default function Task() {
             message: '',
             type: 'Error' as SnackBarType
         });
+    const isMobile = useMediaQuery('(max-width:768px)');
+    
     const handleCloseSnackbar = () => {
         setSnackbar({
             ...snackbar,
@@ -419,25 +421,25 @@ export default function Task() {
     }
 
     return (
-        <div>
+        <div className="w-full">
             <div >
                <h1>Tareas</h1> 
                <p>Gestiona todas tus tareas desde aquí</p>
             </div>
 
-            <div className='w-full shadow p-4 rounded-[var(--roundedGlobal)] bg-white flex gap-3 my-4'>
-                <div className='w-full'>
+            <div className={`w-full shadow p-4 rounded-[var(--roundedGlobal)] bg-white ${isMobile ? 'flex flex-col' : 'flex'} gap-3 my-4`}>
+                <div className={`${isMobile ? 'w-full' : 'w-full'}`}>
                     <p>Filtrar por estado</p>
                     <SelectComponent
                         label={undefined}
-                        className='mx-0'
+                        className='mx-0 w-full'
                         id="basic-select"
                         value={selectedValue}
                         onChange={(value) => setSelectedValue(value as string | number)}
                         options={options}
                     />
                 </div>
-                <div className='w-full'>
+                <div className={`${isMobile ? 'w-full mt-3' : 'w-full'}`}>
                     <p>Buscar</p>
                    <TextFieldAdornmentComponent
                         id="search-field"
@@ -449,226 +451,261 @@ export default function Task() {
                 </div>
             </div>
 
-            {/* Table */}
-            <div>
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
-                    <TableRow>
-                        <TableCell>Mis tareas</TableCell>
-                        <TableCell></TableCell>
-                    </TableRow>
-                    </TableHead>
-
-                    <TableBody>
-                    {rows.map((row) => (
-                        <React.Fragment key={row._id}>
-                            <TableRow
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                <TableCell component="th" scope="row">
-                                    <div className='flex gap-3'>
-                                        <div>
-                                            <CheckboxComponent
-                                                {...label}
-                                                checked={row.status === 'completada'}
-                                                onChange={() => handleTaskStatusChange(row._id, row.status)}
-                                            />
-                                        </div>
-                                        <div className='grid gap-3'>
-                                            <div className='grid'>
-                                                <p>{row.title}</p>
-                                                <p>{row.description}</p>
-                                                
-                                            </div>
-                                            
-                                            <div className='flex gap-3'>
-                                                <p>
-                                                    <StatusChipComponent status={row.status} />
-                                                </p>
-                                                <span className='flex items-center'>
-                                                    <FontAwesomeIcon className='w-[1.2rem] opacity-30' icon={faClipboard} />
-                                                    {row.subTasks?.length || 0}/{row.subTasks?.length || 0}
-                                                </span>
-                                                <span className='flex items-center'>
-                                                    <FontAwesomeIcon className='w-[1.2rem] opacity-30' icon={faComments} />
-                                                    {row.comments?.length || 0}
-                                                </span>
-                                                <span className='flex items-center'>
-                                                    {row.createdAt ? new Date(row.createdAt).toLocaleString() : ''}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                    </div>
-                                    
-                                </TableCell>
-                                <TableCell>
-                                    <div className='flex gap-3 justify-self-end'>
-                                        <FontAwesomeIcon className='w-[1.2rem] cursor-pointer' icon={faPenToSquare} />
-                                        <FontAwesomeIcon
-                                            className='w-[1.2rem] cursor-pointer'
-                                            icon={faTrashCan}
-                                            onClick={() => handleDeleteTask(row._id)}
-                                        />
-                                        <FontAwesomeIcon
-                                            className={`w-[1.2rem] cursor-pointer transition-transform duration-300 ${expandedRow === row._id ? 'rotate-180' : ''}`}
-                                            icon={faChevronDown}
-                                            onClick={() => handleExpandClick(row._id)}
-                                        />
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                            
-                            {expandedRow === row._id && (
-                                <TableRow>
-                                    <TableCell colSpan={2}>
-                                        <div className="p-4rounded-[var(--roundedGlobal)]">
-                                            <div className="mb-4">
-                                            <div className="mt-2">
-                                                    {row.subTasks && row.subTasks.length > 0 ? (
-                                                        <ul className="list-disc pl-5 ">
-                                                            {row.subTasks.map((subTask) => (
-                                                                <li key={subTask.id} className="mb-1 list-none">
-                                                                    <div className="flex items-center gap-2 justify-between">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <CheckboxComponent
-                                                                                checked={subTask.status === 'completada'}
-                                                                                onChange={() => handleSubTaskStatusChange(row._id, subTask.id, subTask.status)}
-                                                                            />
-                                                                            <p>
-                                                                                <StatusChipComponent status={subTask.status} />
-                                                                            </p>
-                                                                            {editingSubTask && editingSubTask.id === subTask.id ? (
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <InputComponent 
-                                                                                        className='w-full'
-                                                                                        placeholder={''}
-                                                                                        name="text" 
-                                                                                        id={'SubTask'} 
-                                                                                        type={'text'}  
-                                                                                        value={editingSubTask.title}
-                                                                                        onChange={(e: string) => { handleEditSubTaskChange(e); }} 
-                                                                                        autoComplete="email"
-                                                                                    />
-                                                                                    <ButtonComponent
-                                                                                        onClick={saveEditSubTask}
-                                                                                    >
-                                                                                        <FontAwesomeIcon className='w-[1.2rem]' icon={faFloppyDisk} />
-                                                                                    </ButtonComponent>
-                                                                                    <ButtonComponent
-                                                                                        onClick={cancelEditSubTask}
-                                                                                        className="bg-gray-500 text-white"
-                                                                                    >
-                                                                                        <FontAwesomeIcon className='w-[1.2rem]' icon={faBan} />
-                                                                                    </ButtonComponent>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <span>{subTask.title}</span>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex gap-2">
-                                                                            <FontAwesomeIcon
-                                                                                className="w-[1rem] cursor-pointer text-blue-500"
-                                                                                icon={faPenToSquare}
-                                                                                onClick={() => startEditSubTask(row._id, subTask.id, subTask.status, subTask.title)}
-                                                                            />
-                                                                            <FontAwesomeIcon
-                                                                                className="w-[1rem] cursor-pointer text-red-500"
-                                                                                icon={faTrashCan}
-                                                                                onClick={() => handleDeleteSubTask(row._id, subTask.id)}
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    ) : (
-                                                        <p>No hay subtareas</p>
-                                                    )}
-                                                </div>
-
-                                                <h3 className="mb-2">Subtareas ({row.subTasks?.length || 0})</h3>
-                                                <div className="flex gap-2 mb-2">
-                                                    <InputComponent 
-                                                        className='w-full'
-                                                        placeholder="Agregar nueva subtarea..." 
-                                                        name="subTask" 
-                                                        id={'subTask'} 
-                                                        type={'text'}  
-                                                        value={newSubTask}
-                                                        onChange={(e) => { handleInputNewSubTas(e) }} 
-                                                    />
-                                                    <ButtonComponent
-                                                        onClick={() => handleAddSubTask(row._id, newSubTask)}
-                                                    >
-                                                        Agregar
-                                                    </ButtonComponent>
-                                                </div>
-                                               
-                                            </div>
-                                            
-                                            <div>
-                                            <div className="mt-2">
-                                                    {row.comments && row.comments.length > 0 ? (
-                                                        <div className="space-y-2">
-                                                            {row.comments.map((comment) => (
-                                                                <div key={comment.id} className="p-2 bg-white border border-gray-200 rounded-md">
-                                                                    <div className="flex justify-between items-center mb-1">
-                                                                        <span className="text-xs text-gray-500">
-                                                                            {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ''}
-                                                                        </span>
-                                                                    </div>
-                                                                    <p>{comment.content}</p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-gray-500">No hay comentarios</p>
-                                                    )}
-                                                </div>
-                                                <h3 className="mb-2">Comentarios ({row.comments?.length || 0})</h3>
-                                                <div className="flex gap-2 mb-2">
-                                                    <TextAreaComponent
-                                                        id="comment"
-                                                        name="comment"
-                                                        description={newComment}
-                                                        onChange={(value) => handleInputComents(value)}
-                                                        placeholder="Agregar nuevo comentario..."
-                                                        rows={4}
-                                                        maxLength={200}
-                                                    />
-                                                    <ButtonComponent
-                                                        className="h-[100%]"
-                                                        onClick={() => handleAddComment(row._id, newComment, row.userId)}
-                                                    >
-                                                        Comentar
-                                                    </ButtonComponent>
-                                                </div>
-                                                
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </React.Fragment>
-                    ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            </div>
-                <div className='py-3 absolute bottom-[2rem] right-[2rem]'>
-                  <SnackBarComponent 
-                        type={snackbar.type}
-                        isOpen={snackbar.open}
-                        onClose={handleCloseSnackbar}
+            {/* Table  */}
+            <div className="w-full overflow-x-auto">
+                <TableContainer component={Paper} style={{ width: '100%', overflowX: 'auto' }}>
+                    <Table 
+                        sx={{ 
+                            minWidth: isMobile ? '100%' : 650,
+                            tableLayout: isMobile ? 'fixed' : 'auto'
+                        }} 
+                        aria-label="simple table"
                     >
-                          {typeof snackbar.message === 'object' 
-                        ? (snackbar.message as Error).message 
-                        : snackbar.message}
-                    </SnackBarComponent>
-                </div>
-            
+                        <TableHead>
+                            <TableRow>
+                                <TableCell style={{ width: isMobile ? '75%' : 'auto' }}>Mis tareas</TableCell>
+                                <TableCell style={{ width: isMobile ? '25%' : 'auto' }}></TableCell>
+                            </TableRow>
+                        </TableHead>
+
+                        <TableBody>
+                            {rows.map((row) => (
+                                <React.Fragment key={row._id}>
+                                    <TableRow
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        className="task-row"
+                                    >
+                                        <TableCell 
+                                            component="th" 
+                                            scope="row"
+                                            style={{ 
+                                                padding: isMobile ? '8px' : '16px',
+                                                wordBreak: 'break-word'
+                                            }}
+                                        >
+                                            <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-3`}>
+                                                <div>
+                                                    <CheckboxComponent
+                                                        {...label}
+                                                        checked={row.status === 'completada'}
+                                                        onChange={() => handleTaskStatusChange(row._id, row.status)}
+                                                    />
+                                                </div>
+                                                <div className='grid gap-2'>
+                                                    <div className='grid'>
+                                                        <p className="font-medium">{row.title}</p>
+                                                        <p className={`text-sm text-gray-600 ${isMobile ? 'line-clamp-2' : ''}`}>{row.description}</p>
+                                                    </div>
+                                                    
+                                                    <div className={`${isMobile ? 'flex flex-wrap' : 'flex'} gap-3`}>
+                                                        <p>
+                                                            <StatusChipComponent status={row.status} />
+                                                        </p>
+                                                        <span className='flex items-center'>
+                                                            <FontAwesomeIcon className='w-[1.2rem] opacity-30 mr-1' icon={faClipboard} />
+                                                            {row.subTasks?.length || 0}
+                                                        </span>
+                                                        <span className='flex items-center'>
+                                                            <FontAwesomeIcon className='w-[1.2rem] opacity-30 mr-1' icon={faComments} />
+                                                            {row.comments?.length || 0}
+                                                        </span>
+                                                        {!isMobile && (
+                                                            <span className='flex items-center text-xs'>
+                                                                {row.createdAt ? new Date(row.createdAt).toLocaleString() : ''}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {isMobile && (
+                                                        <span className='text-xs text-gray-500'>
+                                                            {row.createdAt ? new Date(row.createdAt).toLocaleString() : ''}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell 
+                                            style={{ 
+                                                padding: isMobile ? '8px' : '16px',
+                                                textAlign: 'right'
+                                            }}
+                                        >
+                                            <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-3 justify-self-end`}>
+                                                <FontAwesomeIcon className='w-[1.2rem] cursor-pointer mb-2' icon={faPenToSquare} />
+                                                <FontAwesomeIcon
+                                                    className='w-[1.2rem] cursor-pointer mb-2'
+                                                    icon={faTrashCan}
+                                                    onClick={() => handleDeleteTask(row._id)}
+                                                />
+                                                <FontAwesomeIcon
+                                                    className={`w-[1.2rem] cursor-pointer transition-transform duration-300 ${expandedRow === row._id ? 'rotate-180' : ''}`}
+                                                    icon={faChevronDown}
+                                                    onClick={() => handleExpandClick(row._id)}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                    
+                                    {expandedRow === row._id && (
+                                        <TableRow>
+                                            <TableCell 
+                                                colSpan={2}
+                                                style={{ 
+                                                    padding: isMobile ? '8px' : '16px'
+                                                }}
+                                            >
+                                                <div className="rounded-[var(--roundedGlobal)]">
+                                                    <div className="mb-4">
+                                                        <h3 className="mb-2">Subtareas ({row.subTasks?.length || 0})</h3>
+
+                                                        <div className="mt-2">
+                                                            {row.subTasks && row.subTasks.length > 0 ? (
+                                                                <ul className="list-disc pl-5">
+                                                                    {row.subTasks.map((subTask) => (
+                                                                        <li key={subTask.id} className="mb-2 list-none">
+                                                                            <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-2 justify-between`}>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <CheckboxComponent
+                                                                                        checked={subTask.status === 'completada'}
+                                                                                        onChange={() => handleSubTaskStatusChange(row._id, subTask.id, subTask.status)}
+                                                                                    />
+                                                                                    <p>
+                                                                                        <StatusChipComponent status={subTask.status} />
+                                                                                    </p>
+                                                                                    {editingSubTask && editingSubTask.id === subTask.id ? (
+                                                                                        <div className={`${isMobile ? 'flex flex-col w-full' : 'flex items-center'} gap-2`}>
+                                                                                            <InputComponent 
+                                                                                                className='w-full'
+                                                                                                placeholder={''}
+                                                                                                name="text" 
+                                                                                                id={'SubTask'} 
+                                                                                                type={'text'}  
+                                                                                                value={editingSubTask.title}
+                                                                                                onChange={(e: string) => { handleEditSubTaskChange(e); }} 
+                                                                                                autoComplete="email"
+                                                                                            />
+                                                                                            <div className={`${isMobile ? 'flex mt-2' : 'flex'} gap-2`}>
+                                                                                                <ButtonComponent
+                                                                                                    onClick={saveEditSubTask}
+                                                                                                    className={isMobile ? 'flex-1' : ''}
+                                                                                                >
+                                                                                                    <FontAwesomeIcon className='w-[1.2rem]' icon={faFloppyDisk} />
+                                                                                                </ButtonComponent>
+                                                                                                <ButtonComponent
+                                                                                                    onClick={cancelEditSubTask}
+                                                                                                    className={`bg-gray-500 text-white ${isMobile ? 'flex-1' : ''}`}
+                                                                                                >
+                                                                                                    <FontAwesomeIcon className='w-[1.2rem]' icon={faBan} />
+                                                                                                </ButtonComponent>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <span className="break-words">{subTask.title}</span>
+                                                                                    )}
+                                                                                </div>
+                                                                                {!editingSubTask || editingSubTask.id !== subTask.id ? (
+                                                                                    <div className={`${isMobile ? 'mt-2 flex justify-end' : 'flex'} gap-2`}>
+                                                                                        <FontAwesomeIcon
+                                                                                            className="w-[1rem] cursor-pointer text-blue-500"
+                                                                                            icon={faPenToSquare}
+                                                                                            onClick={() => startEditSubTask(row._id, subTask.id, subTask.status, subTask.title)}
+                                                                                        />
+                                                                                        <FontAwesomeIcon
+                                                                                            className="w-[1rem] cursor-pointer text-red-500"
+                                                                                            icon={faTrashCan}
+                                                                                            onClick={() => handleDeleteSubTask(row._id, subTask.id)}
+                                                                                        />
+                                                                                    </div>
+                                                                                ) : null}
+                                                                            </div>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            ) : (
+                                                                <p>No hay subtareas</p>
+                                                            )}
+                                                        </div>
+                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2`}>
+                                                            <InputComponent 
+                                                                className='w-full'
+                                                                placeholder="Agregar nueva subtarea..." 
+                                                                name="subTask" 
+                                                                id={'subTask'} 
+                                                                type={'text'}  
+                                                                value={newSubTask}
+                                                                onChange={(e) => { handleInputNewSubTas(e) }} 
+                                                            />
+                                                            <ButtonComponent
+                                                                className={isMobile ? 'mt-2 w-full' : ''}
+                                                                onClick={() => handleAddSubTask(row._id, newSubTask)}
+                                                            >
+                                                                Agregar
+                                                            </ButtonComponent>
+                                                        </div>
+                                                    
+                                                       
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <h3 className="mb-2">Comentarios ({row.comments?.length || 0})</h3>
+                                                        <div className="mt-2">
+                                                            {row.comments && row.comments.length > 0 ? (
+                                                                <div className="space-y-2">
+                                                                    {row.comments.map((comment) => (
+                                                                        <div key={comment.id} className="p-2 bg-white border border-gray-200 rounded-md">
+                                                                            <div className="flex justify-between items-center mb-1">
+                                                                                <span className="text-xs text-gray-500">
+                                                                                    {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ''}
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="break-words">{comment.content}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-gray-500">No hay comentarios</p>
+                                                            )}
+                                                        </div>
+                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2`}>
+                                                            <TextAreaComponent
+                                                                id="comment"
+                                                                name="comment"
+                                                                description={newComment}
+                                                                onChange={(value) => handleInputComents(value)}
+                                                                placeholder="Agregar nuevo comentario..."
+                                                                rows={4}
+                                                                maxLength={200}
+                                                            />
+                                                            <ButtonComponent
+                                                                className={isMobile ? 'mt-2 w-full' : 'h-[100%]'}
+                                                                onClick={() => handleAddComment(row._id, newComment, row.userId)}
+                                                            >
+                                                                Comentar
+                                                            </ButtonComponent>
+                                                        </div>
+                                                        
+                                                        
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </div>
+            <div className={`py-3 ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50' : 'absolute bottom-[2rem] right-[2rem]'}`}>
+                <SnackBarComponent 
+                    type={snackbar.type}
+                    isOpen={snackbar.open}
+                    onClose={handleCloseSnackbar}
+                >
+                    {typeof snackbar.message === 'object' 
+                    ? (snackbar.message as Error).message 
+                    : snackbar.message}
+                </SnackBarComponent>
+            </div>
         </div>
     );
 }
