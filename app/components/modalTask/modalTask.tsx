@@ -3,51 +3,78 @@
 import React, { useEffect, useState } from 'react';
 import InputComponent from '@/app/components/common/inputComponent';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faPlus  } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPlus, faPencil } from '@fortawesome/free-solid-svg-icons';
 import TextAreaComponent from '../common/textAreaComponent';
 import { useAuth } from '@/app/context/AuthContext';
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
-import { PostTask } from '@/app/lib/redux/thunks/task.thunk';
+import { EditTask, PostTask } from '@/app/lib/redux/thunks/task.thunk';
 import SnackBarComponent, { SnackBarType } from '../common/snackBarComponent';
 import { resetTask } from '@/app/lib/redux/reducers/tasks.reducer';
+import { TaskI } from '@/app/lib/interfaces/taskInterface';
 
-export default function ModalTask({onCancel}:{onCancel: () => void;}) {
+interface ModalTaskProps {
+  onCancel: () => void;
+  task?: TaskI; // Tarea existente para editar (opcional)
+}
+
+export default function ModalTask({ onCancel, task }: ModalTaskProps) {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const statePostTask = useAppSelector((state) => state.taskReducer.postTask);
-  const [title, setTitle] = useState('');
-  const [description, setDescription]= useState('');
+  const stateEditTask = useAppSelector((state) => state.taskReducer.editTask);
+  const [title, setTitle] = useState(task?.title || '');
+  const [description, setDescription] = useState(task?.description || '');
   const [titleError, setTitleError] = useState('');
-   const [snackbar, setSnackbar] = useState({
-          open: false,
-          message: '',
-          type: 'Error' as SnackBarType
-      });
-  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    type: 'Error' as SnackBarType
+  });
 
-  useEffect(()=>{
-      if(statePostTask.status == 'failed'){
-        setSnackbar({
-          open: true,
-          message: statePostTask.error || '',
-          type: 'Error'
-      });
-      }
+  const isEditMode = !!task;
 
-      if (statePostTask.status == 'succeeded') {
-        setSnackbar({
-            open: true,
-            message: '¡Tarea agregada con exito!',
-            type: 'Success'
-        });
-        setTimeout(() => {
-          onCancel()
-          dispatch(resetTask());
+  useEffect(() => {
+    if (!isEditMode && statePostTask.status === 'failed') {
+      setSnackbar({
+        open: true,
+        message: statePostTask.error || '',
+        type: 'Error'
+      });
+    }
+
+    if (!isEditMode && statePostTask.status === 'succeeded') {
+      setSnackbar({
+        open: true,
+        message: '¡Tarea agregada con éxito!',
+        type: 'Success'
+      });
+      setTimeout(() => {
+        onCancel();
+        dispatch(resetTask());
       }, 1500);
     }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[statePostTask])
+    if (isEditMode && stateEditTask.status === 'failed') {
+      setSnackbar({
+        open: true,
+        message: stateEditTask.error || '',
+        type: 'Error'
+      });
+    }
+
+    if (isEditMode && stateEditTask.status === 'succeeded') {
+      setSnackbar({
+        open: true,
+        message: '¡Tarea actualizada con éxito!',
+        type: 'Success'
+      });
+      setTimeout(() => {
+        onCancel();
+        dispatch(resetTask());
+      }, 1500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statePostTask, stateEditTask]);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -63,33 +90,48 @@ export default function ModalTask({onCancel}:{onCancel: () => void;}) {
 
   const handleCloseSnackbar = () => {
     setSnackbar({
-        ...snackbar,
-        open: false
+      ...snackbar,
+      open: false
     });
-};
+  };
 
-  const handletextArea= (value: string)=>{
+  const handletextArea = (value: string) => {
     setDescription(value);
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isEditMode && task?._id) {
+      // Editar tarea existente
+      dispatch(
+        EditTask({
+          taskId: task._id,
+          title: title.trim(),
+          description: description.trim()
+        })
+      );
+    } else {
+      // Crear nueva tarea
       dispatch(
         PostTask({
-            title:title.trim(),
-            description: description.trim(), 
-            userId: user ? user.id.toString() : ''
+          title: title.trim(),
+          description: description.trim(),
+          userId: user ? user.id.toString() : ''
         })
-      );    
+      );
+    }
   };
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-medium text-gray-800 flex items-center">
-          <FontAwesomeIcon className='h-full w-[1.2rem] text-[var(--colorSmartNest)] opacity-60 pr-2' icon={faPlus} /> 
-          Nueva Tarea
+          <FontAwesomeIcon
+            className='h-full w-[1.2rem] text-[var(--colorSmartNest)] opacity-60 pr-2'
+            icon={isEditMode ? faPencil : faPlus}
+          />
+          {isEditMode ? 'Editar Tarea' : 'Nueva Tarea'}
         </h2>
         <button
           type="button"
@@ -97,23 +139,22 @@ export default function ModalTask({onCancel}:{onCancel: () => void;}) {
           className="text-gray-400 hover:text-gray-500"
           aria-label="Cerrar"
         >
-          <FontAwesomeIcon className='h-full w-[1.2rem] text-[var(--colorText)] opacity-60' icon={faXmark} /> 
+          <FontAwesomeIcon className='h-full w-[1.2rem] text-[var(--colorText)] opacity-60' icon={faXmark} />
         </button>
       </div>
 
       <div className='py-3 absolute bottom-[2rem] right-[2rem]'>
-        <SnackBarComponent 
-              type={snackbar.type}
-              isOpen={snackbar.open}
-              onClose={handleCloseSnackbar}
-          >
-                {typeof snackbar.message === 'object' 
-              ? (snackbar.message as Error).message 
-              : snackbar.message}
-          </SnackBarComponent>
+        <SnackBarComponent
+          type={snackbar.type}
+          isOpen={snackbar.open}
+          onClose={handleCloseSnackbar}
+        >
+          {typeof snackbar.message === 'object'
+            ? (snackbar.message as Error).message
+            : snackbar.message}
+        </SnackBarComponent>
       </div>
         
-      
       <form onSubmit={handleSubmit} className="animate-fadeIn">
         <div className="space-y-5">
           <div>
@@ -159,10 +200,10 @@ export default function ModalTask({onCancel}:{onCancel: () => void;}) {
               </button>
               <button
                 type="submit"
-                disabled={titleError ? true: false}
+                disabled={!!titleError}
                 className="px-4 py-2 bg-[var(--colorSmartNest)] border border-transparent rounded-md text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
               >
-                Crear Tarea
+                {isEditMode ? 'Actualizar Tarea' : 'Crear Tarea'}
               </button>
             </div>
           </div>

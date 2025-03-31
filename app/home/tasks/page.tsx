@@ -10,11 +10,12 @@ import CheckboxComponent from '@/app/components/common/checkboxComponent';
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, useMediaQuery } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
 import { addCommment, DeleteSubTask, DeleteTask, EditSubTask, GetAlltask, PutAddSubTask, subTaskStatusChange, taskStatusChange } from '@/app/lib/redux/thunks/task.thunk';
-import { SubTask, Comment } from '@/app/lib/interfaces/taskInterface';
+import { SubTask, Comment, TaskI } from '@/app/lib/interfaces/taskInterface';
 import InputComponent from '@/app/components/common/inputComponent';
 import SnackBarComponent, { SnackBarType } from '@/app/components/common/snackBarComponent';
 import TextAreaComponent from '@/app/components/common/textAreaComponent';
 import ButtonComponent from '@/app/components/common/buttonComponent';
+import ModalTask from '@/app/components/modalTask/modalTask';
 import { User } from '@/app/lib/interfaces/users';
 
 export default function Task() {
@@ -28,6 +29,7 @@ export default function Task() {
     const stateDeleteTask = useAppSelector((state) => state.taskReducer.deleteTask);
     const stateDeleteSubTask = useAppSelector((state) => state.taskReducer.deleteSubTask);
     const stateEditSubTask = useAppSelector((state) => state.taskReducer.editSubTask);
+    const stateEditTask = useAppSelector((state) => state.taskReducer.editTask);
     const responseGetAllTask = useAppSelector((state) => state.taskReducer.responsegetAllTask);
     const [selectedValue, setSelectedValue] = useState<string | number>('');
     const [searchValue, setSearchValue] = useState('');
@@ -36,6 +38,8 @@ export default function Task() {
     const [newSubTask, setNewSubTask] = useState('');
     const [newComment, setNewComment] = useState('');
     const [editingSubTask, setEditingSubTask] = useState<{id: string, taskId: string, currentStatus: "pendiente" | "completada" ,title: string} | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<TaskI | null>(null);
     const [snackbar, setSnackbar] = useState({
             open: false,
             message: '',
@@ -182,6 +186,32 @@ export default function Task() {
         }
     };
 
+    // Función para iniciar la edición de una tarea principal
+    const startEditTask = (task: ReturnType<typeof createData>) => {
+        if (task._id && task.title && task.description) {
+            const taskToEdit: TaskI = {
+                _id: task._id,
+                title: task.title,
+                description: task.description || '',
+                status: task.status,
+                userId: task.userId,
+                createdAt: task.createdAt,
+                updatedAt: task.updatedAt,
+                user: task.user,
+                subTasks: task.subTasks,
+                comments: task.comments
+            };
+            setEditingTask(taskToEdit);
+            setIsModalOpen(true);
+        }
+    };
+
+    // Función para cerrar el modal de edición
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingTask(null);
+    };
+
     // Función para iniciar la edición de una subtarea
     const startEditSubTask = (taskId: string | undefined, subTaskId: string,currentStatus: "pendiente" | "completada", title: string) => {
         if (taskId && subTaskId) {
@@ -299,6 +329,26 @@ export default function Task() {
     }, [stateEditSubTask])
 
     useEffect(()=>{
+        if(stateEditTask.status == 'succeeded'){
+            setSnackbar({
+                open: true,
+                message: '¡Tarea editada correctamente!',
+                type: 'Success'
+            });
+            setIsModalOpen(false);
+            setEditingTask(null);
+        }
+
+        if(stateEditTask.status == 'failed'){
+            setSnackbar({
+                open: true,
+                message: stateEditTask.error || '¡Error al editar tarea!',
+                type: 'Error'
+            });
+        }
+    }, [stateEditTask])
+
+    useEffect(()=>{
 
         if(stateTaskStatusChange.status == 'succeeded'){
             setSnackbar({
@@ -368,7 +418,7 @@ export default function Task() {
             GetAlltask()
         )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[statePostTask, statePutAddSubTask, stateaddCommment, stateTaskStatusChange, stateSubTaskStatusChange, stateDeleteTask, stateDeleteSubTask, stateEditSubTask])
+    },[statePostTask, statePutAddSubTask, stateaddCommment, stateTaskStatusChange, stateSubTaskStatusChange, stateDeleteTask, stateDeleteSubTask, stateEditSubTask, stateEditTask])
 
     useEffect(() => {
         console.log(stateGetAllTask);
@@ -532,18 +582,22 @@ export default function Task() {
                                             }}
                                         >
                                             <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-3 justify-self-end`}>
-                                                <FontAwesomeIcon className='w-[1.2rem] cursor-pointer mb-2' icon={faPenToSquare} />
-                                                <FontAwesomeIcon
-                                                    className='w-[1.2rem] cursor-pointer mb-2'
-                                                    icon={faTrashCan}
-                                                    onClick={() => handleDeleteTask(row._id)}
-                                                />
-                                                <FontAwesomeIcon
-                                                    className={`w-[1.2rem] cursor-pointer transition-transform duration-300 ${expandedRow === row._id ? 'rotate-180' : ''}`}
-                                                    icon={faChevronDown}
-                                                    onClick={() => handleExpandClick(row._id)}
-                                                />
-                                            </div>
+                                               <FontAwesomeIcon
+                                                   className='w-[1.2rem] cursor-pointer mb-2'
+                                                   icon={faPenToSquare}
+                                                   onClick={() => startEditTask(row)}
+                                               />
+                                               <FontAwesomeIcon
+                                                   className='w-[1.2rem] cursor-pointer mb-2'
+                                                   icon={faTrashCan}
+                                                   onClick={() => handleDeleteTask(row._id)}
+                                               />
+                                               <FontAwesomeIcon
+                                                   className={`w-[1.2rem] cursor-pointer transition-transform duration-300 ${expandedRow === row._id ? 'rotate-180' : ''}`}
+                                                   icon={faChevronDown}
+                                                   onClick={() => handleExpandClick(row._id)}
+                                               />
+                                           </div>
                                         </TableCell>
                                     </TableRow>
                                     
@@ -628,7 +682,7 @@ export default function Task() {
                                                                 <p>No hay subtareas</p>
                                                             )}
                                                         </div>
-                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2`}>
+                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2 my-4`}>
                                                             <InputComponent 
                                                                 className='w-full'
                                                                 placeholder="Agregar nueva subtarea..." 
@@ -670,7 +724,7 @@ export default function Task() {
                                                                 <p className="text-gray-500">No hay comentarios</p>
                                                             )}
                                                         </div>
-                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2`}>
+                                                        <div className={`${isMobile ? 'flex flex-col' : 'flex'} gap-2 mb-2 my-4`}>
                                                             <TextAreaComponent
                                                                 id="comment"
                                                                 name="comment"
@@ -702,16 +756,28 @@ export default function Task() {
                 </TableContainer>
             </div>
             <div className={`py-3 ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50' : 'absolute bottom-[2rem] right-[2rem]'}`}>
-                <SnackBarComponent 
+                <SnackBarComponent
                     type={snackbar.type}
                     isOpen={snackbar.open}
                     onClose={handleCloseSnackbar}
                 >
-                    {typeof snackbar.message === 'object' 
-                    ? (snackbar.message as Error).message 
+                    {typeof snackbar.message === 'object'
+                    ? (snackbar.message as Error).message
                     : snackbar.message}
                 </SnackBarComponent>
             </div>
+
+            {/* Modal para editar tarea */}
+            {isModalOpen && editingTask && (
+                <div className="fixed inset-0 bg-[#0000004f] flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+                        <ModalTask
+                            onCancel={handleCloseModal}
+                            task={editingTask}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

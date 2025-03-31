@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { addComment, addNewTask, addSubTask, allTask, changetaskStatusChange, changetaSubTaskStatus, deleteSubTask, deleteTask, editSubTask } from "../../services/tasks";
+import { addComment, addNewTask, addSubTask, allTask, changetaskStatusChange, changetaSubTaskStatus, deleteSubTask, deleteTask, editSubTask, editTask } from "../../services/tasks";
 
 export const PostTask = createAsyncThunk(
     'user/PostTask', 
@@ -122,6 +122,20 @@ export const EditSubTask = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error : 'Error desconocido al editar subtarea'
+      );
+    }
+  }
+);
+
+export const EditTask = createAsyncThunk(
+  'user/EditTask',
+  async (params: { taskId: string, title: string, description: string }, { rejectWithValue }) => {
+    try {
+      const response = await editTask(params.taskId, params.title, params.description);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error : 'Error desconocido al editar tarea'
       );
     }
   }

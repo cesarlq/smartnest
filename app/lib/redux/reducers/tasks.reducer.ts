@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { InitialStateTaskI } from '../../interfaces/taskInterface';
-import { PostTask, GetAlltask, PutAddSubTask, addCommment, taskStatusChange, subTaskStatusChange, DeleteTask, DeleteSubTask, EditSubTask } from '../thunks/task.thunk';
+import { PostTask, GetAlltask, PutAddSubTask, addCommment, taskStatusChange, subTaskStatusChange, DeleteTask, DeleteSubTask, EditSubTask, EditTask } from '../thunks/task.thunk';
 
 const initialState: InitialStateTaskI = {
     postTask: {
@@ -205,6 +205,21 @@ export const taskSlice = createSlice({
        auth.addCase(EditSubTask.fulfilled, (state, action) => {
            state.responseEditSubTask = action.payload;
            state.editSubTask.status = 'succeeded';
+       });
+
+       //EDIT Task
+       auth.addCase(EditTask.pending, (state) => {
+           state.editTask.status = 'loading';
+       });
+       
+       auth.addCase(EditTask.rejected, (state, action) => {
+           state.editTask.status = 'failed';
+           state.editTask.error = action.payload as string || 'Error desconocido';
+       });
+       
+       auth.addCase(EditTask.fulfilled, (state, action) => {
+           state.responseEditTask = action.payload;
+           state.editTask.status = 'succeeded';
        });
    },
 });

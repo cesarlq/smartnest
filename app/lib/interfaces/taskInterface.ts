@@ -88,15 +88,12 @@ export interface responseEditTaskI {
     updatedTask?: TaskI
 }
 
-
-
 export interface Comment {
     id: string;
     content: string;
     createdAt: Date;
     updatedAt?: Date;
     userId: string;
-    user?: User;
 }
 
 export interface SubTask {
