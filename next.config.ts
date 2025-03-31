@@ -1,10 +1,21 @@
 import type { NextConfig } from "next";
 
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3003/api/:path*' // Proxy a tu servidor Express
+      }
+    ]
+  }
+}
+
 const nextConfig: NextConfig = {
   /* config options here */
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // No incluir estos módulos en el cliente
+      
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,

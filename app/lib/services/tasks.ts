@@ -1,3 +1,6 @@
+// URL base del servidor Express
+const API_BASE_URL = process.env.SERVER_URL || '';
+
 
 export async function addNewTask(title: string, description: string, userId:string) {
   try {
@@ -9,14 +12,13 @@ export async function addNewTask(title: string, description: string, userId:stri
       body: JSON.stringify({ title, description, userId}),
     };
 
-    const response = await fetch('/api/tasks/newtask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/newtask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Mensaje de error recibido:', errorMessage);
       throw new Error(errorMessage);
-
     }
     return responseData;
   } catch (error) {
@@ -42,14 +44,13 @@ export async function addSubTask(taskId: string, title:string) {
                 }
             }),
       };
-        const response = await fetch('/api/tasks/updatetask',options);
+        const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`,options);
         const responseData = await response.json();
 
         if (!response.ok) {
           const errorMessage = responseData.message || `Error: ${response.statusText}`;
           console.log('Error al agregar subtarea', errorMessage);
           throw new Error(errorMessage);
-
         }
         return responseData;
     } catch (error) {
@@ -74,14 +75,13 @@ export async function addComment(taskId: string | undefined, content: string, us
           }
       }),
     };
-      const response = await fetch('/api/tasks/updatetask',options);
+      const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`,options);
       const responseData = await response.json();
 
       if (!response.ok) {
         const errorMessage = responseData.message || `Error: ${response.statusText}`;
         console.log('Error al agregar comentario', errorMessage);
         throw new Error(errorMessage);
-
       }
       return responseData;
   } catch (error) {
@@ -98,14 +98,13 @@ export async function allTask() {
       },
     };
 
-    const response = await fetch('/api/tasks/alltask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/alltask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Mensaje de error recibido:', errorMessage);
       throw new Error(errorMessage);
-
     }
     return responseData;
   } catch (error) {
@@ -131,21 +130,19 @@ export async function changetaskStatusChange(taskId: string | undefined, current
       }),
     };
 
-    const response = await fetch('/api/tasks/updatetask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Error al actualizar estado de tarea:', errorMessage);
       throw new Error(errorMessage);
-
     }
     return responseData;
   } catch (error) {
     console.error('Error al actualizar estado de tarea:', error);
     throw error;
   }
-
 }
 
 
@@ -169,14 +166,13 @@ export async function changetaSubTaskStatus(taskId: string | undefined, subTaskI
       }),
     };
 
-    const response = await fetch('/api/tasks/updatetask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Error al actualizar estado de tarea:', errorMessage);
       throw new Error(errorMessage);
-
     }
     return responseData;
   } catch (error) {
@@ -197,7 +193,7 @@ export async function deleteTask(taskId: string) {
       body: JSON.stringify({ taskId }),
     };
 
-    const response = await fetch('/api/tasks/deleteTask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/deleteTask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -229,7 +225,7 @@ export async function deleteSubTask(taskId: string, subTaskId: string) {
       }),
     };
 
-    const response = await fetch('/api/tasks/updatetask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -265,7 +261,7 @@ export async function editSubTask(taskId: string, subTaskId: string, title: stri
       }),
     };
 
-    const response = await fetch('/api/tasks/updatetask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -298,7 +294,7 @@ export async function editTask(taskId: string, title: string, description: strin
       }),
     };
 
-    const response = await fetch('/api/tasks/updatetask', options);
+    const response = await fetch(`${API_BASE_URL}/api/tasks/updatetask`, options);
     const responseData = await response.json();
 
     if (!response.ok) {

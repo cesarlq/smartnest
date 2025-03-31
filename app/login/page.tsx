@@ -13,14 +13,15 @@ import { LoginCredentialsI } from '../lib/interfaces/users';
 
 export default function Login() {
     const dispatch = useAppDispatch();
-    const stateLoginvalidation = useAppSelector((state) => state.authReducer.getAuth);const router = useRouter();
+    const stateLoginvalidation = useAppSelector((state) => state.authReducer);
+    const router = useRouter();
 
-    const { 
-            register, 
-            handleSubmit, 
-            formState: { errors }, 
-            setValue, 
-            watch 
+    const {
+            register,
+            handleSubmit,
+            formState: { errors },
+            setValue,
+            watch
         } = useForm<LoginCredentialsI>({
             mode: 'onChange',
             defaultValues: {
@@ -37,31 +38,51 @@ export default function Login() {
     const emailValue = watch('email');
     const passwordValue = watch('password');
 
-
-    useEffect(()=> {
-        console.log(stateLoginvalidation)
-        if (stateLoginvalidation.status == 'succeeded') {
+    useEffect(() => {
+        console.log("Estado de login:", stateLoginvalidation);
+        
+        if (stateLoginvalidation.getAuth.status === 'succeeded') {
             setSnackbar({
                 open: true,
                 message: '¡Inicio de sesión exitoso!',
                 type: 'Success'
             });
 
-             // Esperar a que el usuario vea el mensaje de éxito antes de redirigir
-             setTimeout(() => {
+            // Guardar datos en localStorage si están disponibles
+            const authData = stateLoginvalidation.auth;
+            if (authData) {
+                // El token podría estar en la respuesta directamente
+                const authResponse = authData as unknown as { token?: string };
+                if (authResponse.token) {
+                    localStorage.setItem('token', authResponse.token);
+                }
+                
+                // El usuario siempre debe estar presente
+                if (authData.user) {
+                    localStorage.setItem('user', JSON.stringify(authData.user));
+                }
+            }
+
+            // Redirección inmediata al home
+            console.log("Redirigiendo a /home...");
+            
+            // Usar window.location.href para una redirección más directa
+            if (typeof window !== 'undefined') {
+                window.location.href = '/home';
+            } else {
                 router.push('/home');
-            }, 1500);
+            }
         }
 
-        if (stateLoginvalidation.status == 'failed') {
+        if (stateLoginvalidation.getAuth.status === 'failed') {
             setSnackbar({
                 open: true,
-                message: stateLoginvalidation.error || '',
+                message: stateLoginvalidation.getAuth.error || '',
                 type: 'Error'
             });
         }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[stateLoginvalidation])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stateLoginvalidation]);
 
 
     const handleCloseSnackbar = () => {
@@ -162,7 +183,7 @@ export default function Login() {
                     
                     <ButtonComponent
                         disabled={false}>
-                        {stateLoginvalidation.status == 'loading' ? 'PROCESANDO...' : 'INICIAR SESIÓN'}
+                        {stateLoginvalidation.getAuth.status === 'loading' ? 'PROCESANDO...' : 'INICIAR SESIÓN'}
                     </ButtonComponent>
 
                     <div className={`flex items-center w-full my-2`}>

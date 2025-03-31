@@ -57,7 +57,13 @@ export default function Register() {
             });
 
             setTimeout(() => {
-                router.push('/home'); // Redireccionar al dashboard
+                console.log('Redirigiendo a /home después de registro exitoso');
+                // Usar window.location.href para una redirección más directa
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/home';
+                } else {
+                    router.push('/home');
+                }
             }, 1500);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps

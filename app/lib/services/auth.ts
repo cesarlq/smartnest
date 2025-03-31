@@ -1,3 +1,6 @@
+// URL base del servidor Express
+const API_BASE_URL = process.env.SERVER_URL || '';
+
 export const login = async (email: string, password: string) => {
   try {
     const options: RequestInit = {
@@ -5,17 +8,19 @@ export const login = async (email: string, password: string) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Para recibir/enviar cookies
       body: JSON.stringify({ email, password }),
     };
 
-    const response = await fetch('/api/auth/login', options);
+    console.log("Cookies recibidas:", document.cookie);
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Mensaje de error recibido:', errorMessage);
       throw new Error(errorMessage);
-
     }
 
     console.log('Respuesta del login:', responseData);
@@ -52,14 +57,13 @@ export const register = async (name: string, email: string, password: string) =>
       body: JSON.stringify({name, email, password }),
     };
 
-    const response = await fetch('/api/auth/register', options);
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       const errorMessage = responseData.message || `Error: ${response.statusText}`;
       console.log('Mensaje de error recibido:', errorMessage);
       throw new Error(errorMessage);
-
     }
 
     console.log('Respuesta del registro:', responseData);

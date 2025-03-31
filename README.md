@@ -27,6 +27,36 @@ smartnest-xi.vercel.app
 - `npm run build`: Construye la aplicación para producción.
 - `npm run start`: Inicia la aplicación en modo producción.
 - `npm run lint`: Ejecuta el linter para verificar el código.
+- `npm run server`: Ejecuta el servidor
+## Cómo correr el proyecto
+
+### Configuración previa
+1. Asegúrate de tener un archivo `.env.local` en la raíz del proyecto con la siguiente configuración:
+   ```
+   MONGODB_URI
+   PORT=3003
+   ```
+
+### Ejecutar el servidor backend
+1. Inicia el servidor Express:
+   ```bash
+   npm run server
+   ```
+   El servidor se ejecutará en `http://localhost:3003`
+
+### Ejecutar el cliente/frontend
+1. En otra terminal, inicia el servidor de desarrollo de Next.js:
+   ```bash
+   npm run dev
+   ```
+2. Abre tu navegador y navega a `http://localhost:3000`
+
+### Ejecutar ambos simultáneamente
+Si deseas ejecutar tanto el servidor como el cliente en una sola terminal, puedes usar:
+```bash
+npm run server & npm run dev
+```
+
 
 ## Dependencias
 - @emotion/react: ^11.14.0
@@ -63,9 +93,3 @@ smartnest-xi.vercel.app
 - tailwindcss: ^4
 - typescript: ^5
 
-## Cómo correr el proyecto
-1. Inicia el servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
-2. Abre tu navegador y navega a `http://localhost:3000`.

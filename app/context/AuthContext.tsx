@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
+const SERVER_URL = process.env.SERVER_URL || '';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -42,6 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const parsedUser = JSON.parse(userData);
           console.log('Usuario parseado:', parsedUser);
           setUser(parsedUser);
+          
+          // Si estamos en la página de login o registro y el usuario ya está autenticado,
+          // redirigir al home
+          const currentPath = window.location.pathname;
+          if (currentPath === '/login' || currentPath === '/register') {
+            console.log('Usuario ya autenticado, redirigiendo a /home');
+            router.push('/home');
+          }
         }
       } catch (error) {
         console.error('Error al verificar autenticación:', error);
@@ -56,13 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
-  }, []);
+  }, [router]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/login', {
+      console.log('Iniciando sesión con:', { email });
+      
+      const response = await fetch(`${SERVER_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,17 +82,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const data = await response.json();
+      console.log('Respuesta del servidor:', data);
       
       if (!response.ok) {
         throw new Error(data.message || 'Error al iniciar sesión');
       }
       
       // Guardar datos de sesión
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.token) {
+        console.log('Guardando token en localStorage');
+        localStorage.setItem('token', data.token);
+      }
       
+      if (data.user) {
+        console.log('Guardando usuario en localStorage:', data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      
+      // Establecer el usuario en el contexto
       setUser(data.user);
+      
+      // Redirigir al usuario después de iniciar sesión
+      console.log('Redirigiendo a /home después de login exitoso');
+      
+      // Usar window.location.href para una redirección más directa
+      if (typeof window !== 'undefined') {
+        window.location.href = '/home';
+      } else {
+        router.push('/home');
+      }
+      
+      return data;
     } catch (error) {
+      console.error('Error en login:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -91,13 +124,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('token');
-      window.localStorage.removeItem('user');
+  const logout = async () => {
+    console.log('Cerrando sesión...');
+    
+    try {
+      
+      try {
+        const response = await fetch(`${SERVER_URL}/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        const data = await response.json();
+        console.log('Respuesta del servidor al logout:', data);
+      } catch (apiError) {
+        
+        console.log('No se pudo contactar con la API de logout:', apiError);
+      }
+      
+      
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('token');
+        window.localStorage.removeItem('user');
+        
+        
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        
+        const domain = window.location.hostname;
+        document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
+        
+        
+        if (domain === 'localhost') {
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=;';
+        }
+      }
+      
+      
+      setUser(null);
+      
+      
+      console.log('Redirigiendo a /login después de logout');
+      
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Error en el proceso de logout:', error);
+      
+      
+      setUser(null);
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      } else {
+        router.push('/login');
+      }
     }
-    setUser(null);
-    router.push('/login');
   };
 
   return (
