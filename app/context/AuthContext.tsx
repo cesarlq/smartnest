@@ -30,8 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const token = localStorage.getItem('token');
         const userData = localStorage.getItem('user');
         
+        console.log('Token en localStorage:', token);
+        console.log('Usuario en localStorage:', userData);
+        
         if (token && userData) {
-          setUser(JSON.parse(userData));
+          const parsedUser = JSON.parse(userData);
+          console.log('Usuario parseado:', parsedUser);
+          setUser(parsedUser);
         }
       } catch (error) {
         console.error('Error al verificar autenticación:', error);

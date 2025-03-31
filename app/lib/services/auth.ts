@@ -18,8 +18,20 @@ export const login = async (email: string, password: string) => {
 
     }
 
-    localStorage.setItem('token', responseData.token);
-    localStorage.setItem('user', JSON.stringify(responseData.user));
+    console.log('Respuesta del login:', responseData);
+    
+    if (responseData.token) {
+      localStorage.setItem('token', responseData.token);
+    } else {
+      console.error('No se recibió token en la respuesta');
+    }
+    
+    if (responseData.user) {
+      console.log('Guardando usuario en localStorage:', responseData.user);
+      localStorage.setItem('user', JSON.stringify(responseData.user));
+    } else {
+      console.error('No se recibió información de usuario en la respuesta');
+    }
     
     return responseData;
   } catch (error) {
@@ -48,8 +60,20 @@ export const register = async (name: string, email: string, password: string) =>
 
     }
 
-    localStorage.setItem('token', responseData.token);
-    localStorage.setItem('user', JSON.stringify(responseData.user));
+    console.log('Respuesta del registro:', responseData);
+    
+    if (responseData.token) {
+      localStorage.setItem('token', responseData.token);
+    } else {
+      console.error('No se recibió token en la respuesta de registro');
+    }
+    
+    if (responseData.user) {
+      console.log('Guardando usuario registrado en localStorage:', responseData.user);
+      localStorage.setItem('user', JSON.stringify(responseData.user));
+    } else {
+      console.error('No se recibió información de usuario en la respuesta de registro');
+    }
     
     return responseData;
   } catch (error) {

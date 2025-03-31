@@ -1,8 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faGauge, faListCheck, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faGauge, faListCheck, faGear, faPlus, faSignOut } from '@fortawesome/free-solid-svg-icons';
 import ButtonComponent from '../common/buttonComponent';
 import Cardscomponent from '../common/cardscomponent';
 import ModalTask from '../modalTask/modalTask';
@@ -20,9 +20,11 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
     const [isMobile, setIsMobile] = useState(false);
     const [menuVisible, setMenuVisible] = useState(true);
     const [isOpen, setisOpen] = useState(false);
+    const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+    const settingsMenuRef = useRef<HTMLDivElement>(null);
     const dispatch = useAppDispatch();
     const tasksState = useAppSelector((state) => state.taskReducer.responsegetAllTask);
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
 
     const pendingTasks = tasksState?.allTask?.filter((task) => task.status === 'pendiente')?.length || 0;
     const completedTasks = tasksState?.allTask?.filter((task) => task.status === 'completada')?.length || 0;
@@ -46,10 +48,29 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
     useEffect(() => {
         setMenuVisible(!isMobile);
     }, [isMobile]);
+
+    // Efecto para cerrar el menú de configuración cuando se hace clic fuera de él
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+                setSettingsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
     
+    // Verificar la información del usuario en el contexto y localStorage
     console.log('Usuario del contexto:', user);
-    const userName = user?.name || 'Usuario';
-    const userEmail = user?.email || 'usuario@example.com';
+    console.log('Usuario en localStorage:', localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null);
+    
+    // Intentar obtener el usuario del localStorage si no está en el contexto
+    const userFromStorage = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null;
+    const userName = user?.name || userFromStorage?.name || 'Usuario';
+    const userEmail = user?.email || userFromStorage?.email || 'usuario@example.com';
     
     const toggleMenu = () => {
         setMenuVisible(!menuVisible);
@@ -94,12 +115,13 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                     <ButtonComponent
                         disabled={false}
                         onClick={handleAddTask}
-                        className="inline-flex items-center px-4 py-2 "
+                        className="inline-flex items-center px-4 py-2 gap-2"
                     >
-                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nueva Tarea
+                        <FontAwesomeIcon 
+                                className='h-full w-[1rem]' 
+                                icon={faPlus} 
+                        />
+                            <p className='hidden lg:block'>Nueva Tarea</p>
                     </ButtonComponent>
                 </div>
             </header>
@@ -168,12 +190,36 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                             <p className="text-sm font-medium text-gray-700">{userName}</p>
                             <p className="text-xs text-gray-500">{userEmail}</p>
                             </div>
-                            <button className="ml-auto text-gray-400 hover:text-gray-500">
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            </button>
+                            <div className="ml-auto relative">
+                                <button
+                                    className="text-gray-400 hover:text-gray-500"
+                                    onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+                                >
+                                    <FontAwesomeIcon
+                                        className='h-full w-[1.5rem]'
+                                        icon={faGear}
+                                    />
+                                </button>
+                                
+                                {/* Menú desplegable */}
+                                {settingsMenuOpen && (
+                                    <div
+                                        ref={settingsMenuRef}
+                                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
+                                    >
+                                        <button
+                                            onClick={logout}
+                                            className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={faSignOut}
+                                                className="mr-3 h-4 w-4 text-gray-500"
+                                            />
+                                            Cerrar sesión
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -187,7 +233,6 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                     {children}
                 </main>
             </div>
-             {/* Modal de formulario de tarea */}
             {isOpen && (
                 <div className="fixed inset-0 bg-[#0000004f] flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
