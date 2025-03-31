@@ -3,7 +3,7 @@ import { InitialStateTaskI } from '../../interfaces/taskInterface';
 import { PostTask, GetAlltask, PutAddSubTask, addCommment, taskStatusChange, subTaskStatusChange, DeleteTask, DeleteSubTask, EditSubTask } from '../thunks/task.thunk';
 
 const initialState: InitialStateTaskI = {
-     postTask: {
+    postTask: {
         status: "idle",
         error: null
     },
@@ -29,16 +29,16 @@ const initialState: InitialStateTaskI = {
 
     putChangeStatus: {
         status: 'idle',
-        error: null ,
+        error: null,
     },
     responseChangeStatus: null,
 
     putChangeSubStatus: {
         status: 'idle',
-        error: null ,
+        error: null,
     },
     responseChangeSubStatus: null,
-    
+
     deleteTask: {
         status: 'idle',
         error: null
@@ -55,7 +55,12 @@ const initialState: InitialStateTaskI = {
         status: 'idle',
         error: null
     },
-    responseEditSubTask: null
+    responseEditSubTask: null,
+    editTask: {
+        status: 'idle',
+        error: null
+    },
+    responseEditTask: null
 };
 
 export const taskSlice = createSlice({
