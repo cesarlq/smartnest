@@ -5,7 +5,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import { newUserI } from '../lib/interfaces/users';
 import { TaskI, SubTask, Comment } from '../lib/interfaces/taskInterface';
 
-const uri = "mongodb+srv://cesarlopez:JpA9YJXVK6cBlsYF@smartnest.janjgak.mongodb.net/?retryWrites=true&w=majority&appName=SmartNest";
+const uri = process.env.MONGODB_URI || "";
 const client = new MongoClient(uri);
 
 export async function connectDB() {
