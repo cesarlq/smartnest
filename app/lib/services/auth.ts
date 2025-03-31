@@ -81,7 +81,7 @@ export const register = async (name: string, email: string, password: string) =>
     
     return responseData;
   } catch (error) {
-    console.error('Error en register: ', error);
+    console.error('Error en register:', error);
     throw error;
   }
 };
