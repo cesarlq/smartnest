@@ -43,13 +43,13 @@ export async function PUT(request: NextRequest) {
                 if (!task.subTasks) {
                     task.subTasks = [];
                 }
-                
                 // Encontrar y actualizar la subtarea
                 const updatedSubTasks = task.subTasks.map((subTask: SubTask) => {
                     if (subTask.id === subTaskToUpdate.id) {
                         return {
                             ...subTask,
                             status: subTaskToUpdate.status,
+                            title: subTaskToUpdate.title || subTask.title,
                             updatedAt: new Date()
                         };
                     }
@@ -86,7 +86,38 @@ export async function PUT(request: NextRequest) {
             }
             // Actualización normal
             else {
-                result = await updateTask(taskId, update);
+                
+                if(update.removeSubTask){
+                    console.log('Eliminando subtarea:', update.removeSubTask);
+                    const collection = await getTaskCollection();
+                    const task = await collection.findOne({ _id: new ObjectId(taskId) });
+                    
+                    if (!task) {
+                        return NextResponse.json({
+                            success: false,
+                            message: 'Tarea no encontrada'
+                        }, { status: 404 });
+                    }
+                    
+                    if (!task.subTasks) {
+                        task.subTasks = [];
+                    }
+                    
+                    // Filtrar las subtareas para eliminar la que tiene el ID proporcionado
+                    const updatedSubTasks = task.subTasks.filter((subTask: SubTask) =>
+                        subTask.id !== update.removeSubTask
+                    );
+                    
+                    console.log('Subtareas actualizadas:', updatedSubTasks);
+                    
+                    // Actualizar la tarea con la nueva lista de subtareas
+                    result = await updateTask(taskId, {
+                        subTasks: updatedSubTasks,
+                        updatedAt: new Date()
+                    });
+                } else {
+                    result = await updateTask(taskId, update);
+                }
             }
         }
 

@@ -1,11 +1,14 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faGauge, faListCheck, faGear } from '@fortawesome/free-solid-svg-icons';
 import ButtonComponent from '../common/buttonComponent';
 import Cardscomponent from '../common/cardscomponent';
 import ModalTask from '../modalTask/modalTask';
+import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
+import { GetAlltask } from '@/app/lib/redux/thunks/task.thunk';
+import { useAuth } from '@/app/context/AuthContext';
 
 const menuItems = [
     { name: 'Dashboard', path: '/home/dashboard', icon: <FontAwesomeIcon className='h-full w-[1.2rem] text-[var(--colorText)] opacity-60' icon={faGauge} /> },
@@ -16,7 +19,20 @@ const menuItems = [
 export default function MenuComponent({children}: {children:React.ReactNode}) {
     const [menuVisible, setMenuVisible] = useState(true);
     const [isOpen, setisOpen] = useState(false);
-
+    const dispatch = useAppDispatch();
+    const tasksState = useAppSelector((state) => state.taskReducer.responsegetAllTask);
+    const { user } = useAuth();
+    
+    useEffect(() => {
+        dispatch(GetAlltask());
+    }, [dispatch]);
+    
+    const pendingTasks = tasksState?.allTask?.filter((task) => task.status === 'pendiente')?.length || 0;
+    const completedTasks = tasksState?.allTask?.filter((task) => task.status === 'completada')?.length || 0;
+    
+    console.log('Usuario del contexto:', user);
+    const userName = user?.name || 'Usuario';
+    const userEmail = user?.email || 'usuario@example.com';
     
     const toggleMenu = () => {
         setMenuVisible(!menuVisible);
@@ -94,18 +110,18 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                         <p className=' font-bold '>RESUMEN</p>
 
                         <div className='flex w-full gap-4 pt-3'>
-                            <Cardscomponent 
-                                className='w-full' 
-                                type='Error' 
-                                name={'Pendientes'} 
-                                qty={2} 
+                            <Cardscomponent
+                                className='w-full'
+                                type='Error'
+                                name={'Pendientes'}
+                                qty={pendingTasks}
                             />
 
-                            <Cardscomponent 
-                                className='w-full' 
-                                type='Success' 
-                                name={'Completadas'} 
-                                qty={1} 
+                            <Cardscomponent
+                                className='w-full'
+                                type='Success'
+                                name={'Completadas'}
+                                qty={completedTasks}
                             />
                         </div>
                     </div>
@@ -118,8 +134,8 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                             <span className="text-sm font-medium">U</span>
                             </div>
                             <div className="ml-3">
-                            <p className="text-sm font-medium text-gray-700">Usuario Ejemplo</p>
-                            <p className="text-xs text-gray-500">usuario@example.com</p>
+                            <p className="text-sm font-medium text-gray-700">{userName}</p>
+                            <p className="text-xs text-gray-500">{userEmail}</p>
                             </div>
                             <button className="ml-auto text-gray-400 hover:text-gray-500">
                             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

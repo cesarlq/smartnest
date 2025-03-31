@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { InitialStateTaskI } from '../../interfaces/taskInterface';
-import { PostTask, GetAlltask, PutAddSubTask, addCommment, taskStatusChange, subTaskStatusChange } from '../thunks/task.thunk';
+import { PostTask, GetAlltask, PutAddSubTask, addCommment, taskStatusChange, subTaskStatusChange, DeleteTask, DeleteSubTask, EditSubTask } from '../thunks/task.thunk';
 
 const initialState: InitialStateTaskI = {
      postTask: {
@@ -39,6 +39,23 @@ const initialState: InitialStateTaskI = {
     },
     responseChangeSubStatus: null,
     
+    deleteTask: {
+        status: 'idle',
+        error: null
+    },
+    responseDeleteTask: null,
+
+    deleteSubTask: {
+        status: 'idle',
+        error: null
+    },
+    responseDeleteSubTask: null,
+
+    editSubTask: {
+        status: 'idle',
+        error: null
+    },
+    responseEditSubTask: null
 };
 
 export const taskSlice = createSlice({
@@ -136,11 +153,55 @@ export const taskSlice = createSlice({
         });
         
         auth.addCase(subTaskStatusChange.fulfilled, (state, action) => {
-            state.responseChangeSubStatus = action.payload;
-            state.putChangeSubStatus.status = 'succeeded';
-        });
+           state.responseChangeSubStatus = action.payload;
+           state.putChangeSubStatus.status = 'succeeded';
+       });
 
-    },
+       //DELETE Task
+       auth.addCase(DeleteTask.pending, (state) => {
+           state.deleteTask.status = 'loading';
+       });
+       
+       auth.addCase(DeleteTask.rejected, (state, action) => {
+           state.deleteTask.status = 'failed';
+           state.deleteTask.error = action.payload as string || 'Error desconocido';
+       });
+       
+       auth.addCase(DeleteTask.fulfilled, (state, action) => {
+           state.responseDeleteTask = action.payload;
+           state.deleteTask.status = 'succeeded';
+       });
+
+       //DELETE SubTask
+       auth.addCase(DeleteSubTask.pending, (state) => {
+           state.deleteSubTask.status = 'loading';
+       });
+       
+       auth.addCase(DeleteSubTask.rejected, (state, action) => {
+           state.deleteSubTask.status = 'failed';
+           state.deleteSubTask.error = action.payload as string || 'Error desconocido';
+       });
+       
+       auth.addCase(DeleteSubTask.fulfilled, (state, action) => {
+           state.responseDeleteSubTask = action.payload;
+           state.deleteSubTask.status = 'succeeded';
+       });
+
+       //EDIT SubTask
+       auth.addCase(EditSubTask.pending, (state) => {
+           state.editSubTask.status = 'loading';
+       });
+       
+       auth.addCase(EditSubTask.rejected, (state, action) => {
+           state.editSubTask.status = 'failed';
+           state.editSubTask.error = action.payload as string || 'Error desconocido';
+       });
+       
+       auth.addCase(EditSubTask.fulfilled, (state, action) => {
+           state.responseEditSubTask = action.payload;
+           state.editSubTask.status = 'succeeded';
+       });
+   },
 });
 
 export const { resetTask } = taskSlice.actions;

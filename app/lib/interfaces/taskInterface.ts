@@ -36,7 +36,31 @@ export interface InitialStateTaskI {
         status: 'idle' | 'loading' | 'succeeded' | 'failed',
         error: null | string
     },
-    responseChangeSubStatus: null | string
+    responseChangeSubStatus: null | string,
+
+    deleteTask: {
+        status: 'idle' | 'loading' | 'succeeded' | 'failed',
+        error: null | string
+    },
+    responseDeleteTask: null | responseDeleteTaskI,
+
+    deleteSubTask: {
+        status: 'idle' | 'loading' | 'succeeded' | 'failed',
+        error: null | string
+    },
+    responseDeleteSubTask: null | responseDeleteTaskI,
+
+    editSubTask: {
+        status: 'idle' | 'loading' | 'succeeded' | 'failed',
+        error: null | string
+    },
+    responseEditSubTask: null | responseEditTaskI,
+
+    editTask: {
+        status: 'idle' | 'loading' | 'succeeded' | 'failed',
+        error: null | string
+    },
+    responseEditTask: null | responseEditTaskI
 }
 
 export interface responsegetAllTaskI {
@@ -50,6 +74,17 @@ export interface responsePostTaskI {
     message: string,
     taskId: string,
     task: TaskI
+}
+
+export interface responseDeleteTaskI {
+    success: boolean,
+    message: string
+}
+
+export interface responseEditTaskI {
+    success: boolean,
+    message: string,
+    updatedTask?: TaskI
 }
 
 export interface User {

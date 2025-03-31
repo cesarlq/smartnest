@@ -183,6 +183,132 @@ export async function changetaSubTaskStatus(taskId: string | undefined, subTaskI
     console.error('Error al actualizar estado de tarea:', error);
     throw error;
   }
+}
 
+export async function deleteTask(taskId: string) {
+  if (!taskId) return;
   
+  try {
+    const options: RequestInit = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ taskId }),
+    };
+
+    const response = await fetch('/api/tasks/deleteTask', options);
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || `Error: ${response.statusText}`;
+      console.log('Error al eliminar tarea:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error al eliminar tarea:', error);
+    throw error;
+  }
+}
+
+export async function deleteSubTask(taskId: string, subTaskId: string) {
+  if (!taskId || !subTaskId) return;
+  
+  try {
+    const options: RequestInit = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        taskId,
+        update: {
+          removeSubTask: subTaskId
+        }
+      }),
+    };
+
+    const response = await fetch('/api/tasks/updatetask', options);
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || `Error: ${response.statusText}`;
+      console.log('Error al eliminar subtarea:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error al eliminar subtarea:', error);
+    throw error;
+  }
+}
+
+export async function editSubTask(taskId: string, subTaskId: string, title: string, currentStatus: 'pendiente' | 'completada') {
+  if (!taskId || !subTaskId || !title.trim()) return;
+  
+  try {
+    const options: RequestInit = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        taskId,
+        update: {
+          subTasks: [{
+            id: subTaskId,
+            status: currentStatus,
+            title: title.trim()
+          }]
+        }
+      }),
+    };
+
+    const response = await fetch('/api/tasks/updatetask', options);
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || `Error: ${response.statusText}`;
+      console.log('Error al editar subtarea:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error al editar subtarea:', error);
+    throw error;
+  }
+}
+
+export async function editTask(taskId: string, title: string, description: string) {
+  if (!taskId || !title.trim() || !description.trim()) return;
+  
+  try {
+    const options: RequestInit = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        taskId,
+        update: {
+          title: title.trim(),
+          description: description.trim()
+        }
+      }),
+    };
+
+    const response = await fetch('/api/tasks/updatetask', options);
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || `Error: ${response.statusText}`;
+      console.log('Error al editar tarea:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    return responseData;
+  } catch (error) {
+    console.error('Error al editar tarea:', error);
+    throw error;
+  }
 }

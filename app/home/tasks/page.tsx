@@ -2,18 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faPenToSquare, faTrashCan, faChevronDown, faClipboard, faComments } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faPenToSquare, faTrashCan, faChevronDown, faClipboard, faComments, faFloppyDisk, faBan } from '@fortawesome/free-solid-svg-icons';
 import SelectComponent from '@/app/components/common/selectComponent';
 import TextFieldAdornmentComponent from '@/app/components/common/textFieldAdornmentComponent';
 import StatusChipComponent from '@/app/components/common/statusChipComponent';
 import CheckboxComponent from '@/app/components/common/checkboxComponent';
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
-import { addCommment, GetAlltask, PutAddSubTask, subTaskStatusChange, taskStatusChange } from '@/app/lib/redux/thunks/task.thunk';
+import { addCommment, DeleteSubTask, DeleteTask, EditSubTask, GetAlltask, PutAddSubTask, subTaskStatusChange, taskStatusChange } from '@/app/lib/redux/thunks/task.thunk';
 import { SubTask, User, Comment } from '@/app/lib/interfaces/taskInterface';
 import InputComponent from '@/app/components/common/inputComponent';
 import SnackBarComponent, { SnackBarType } from '@/app/components/common/snackBarComponent';
 import TextAreaComponent from '@/app/components/common/textAreaComponent';
+import ButtonComponent from '@/app/components/common/buttonComponent';
 
 export default function Task() {
     const dispatch = useAppDispatch();
@@ -23,6 +24,9 @@ export default function Task() {
     const stateaddCommment = useAppSelector((state) => state.taskReducer.putCommit);
     const stateTaskStatusChange = useAppSelector((state) => state.taskReducer.putChangeStatus)
     const stateSubTaskStatusChange = useAppSelector((state) => state.taskReducer.putChangeSubStatus)
+    const stateDeleteTask = useAppSelector((state) => state.taskReducer.deleteTask);
+    const stateDeleteSubTask = useAppSelector((state) => state.taskReducer.deleteSubTask);
+    const stateEditSubTask = useAppSelector((state) => state.taskReducer.editSubTask);
     const responseGetAllTask = useAppSelector((state) => state.taskReducer.responsegetAllTask);
     const [selectedValue, setSelectedValue] = useState<string | number>('');
     const [searchValue, setSearchValue] = useState('');
@@ -30,6 +34,7 @@ export default function Task() {
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [newSubTask, setNewSubTask] = useState('');
     const [newComment, setNewComment] = useState('');
+    const [editingSubTask, setEditingSubTask] = useState<{id: string, taskId: string, currentStatus: "pendiente" | "completada" ,title: string} | null>(null);
     const [snackbar, setSnackbar] = useState({
             open: false,
             message: '',
@@ -44,9 +49,9 @@ export default function Task() {
 
     const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
     const options = [
-        { value: '', label: 'Ninguno', disabled: true },
-        { value: 'pendiente', label: 'pendiente' },
-        { value: 'completada', label: 'completada' },
+        { value: '', label: 'Todos' },
+        { value: 'pendiente', label: 'Pendiente' },
+        { value: 'completada', label: 'Completada' },
       ];
 
     const handleExpandClick = (rowId: string | undefined) => {
@@ -137,7 +142,83 @@ export default function Task() {
                 })
             )
         }
-        
+    };
+
+    // Función para eliminar una tarea
+    const handleDeleteTask = async (taskId: string | undefined) => {
+        if (!taskId) {
+            setSnackbar({
+                open: true,
+                message: '¡ID de tarea no proporcionado!',
+                type: 'Warning'
+            });
+        } else {
+            dispatch(
+                DeleteTask({
+                    taskId
+                })
+            );
+        }
+    };
+
+    // Función para eliminar una subtarea
+    const handleDeleteSubTask = async (taskId: string | undefined, subTaskId: string) => {
+        if (!taskId || !subTaskId) {
+            setSnackbar({
+                open: true,
+                message: '¡ID de tarea o subtarea no proporcionado!',
+                type: 'Warning'
+            });
+        } else {
+            dispatch(
+                DeleteSubTask({
+                    taskId,
+                    subTaskId
+                })
+            );
+        }
+    };
+
+    // Función para iniciar la edición de una subtarea
+    const startEditSubTask = (taskId: string | undefined, subTaskId: string,currentStatus: "pendiente" | "completada", title: string) => {
+        if (taskId && subTaskId) {
+            setEditingSubTask({
+                id: subTaskId,
+                taskId,
+                currentStatus,
+                title
+            });
+        }
+    };
+
+    // Función para guardar la edición de una subtarea
+    const saveEditSubTask = () => {
+        if (editingSubTask) {
+            dispatch(
+                EditSubTask({
+                    taskId: editingSubTask.taskId,
+                    subTaskId: editingSubTask.id,
+                    currentStatus: editingSubTask.currentStatus,
+                    title: editingSubTask.title
+                })
+            );
+            setEditingSubTask(null);
+        }
+    };
+
+    // Función para cancelar la edición de una subtarea
+    const cancelEditSubTask = () => {
+        setEditingSubTask(null);
+    };
+
+    // Función para manejar cambios en el título de la subtarea en edición
+    const handleEditSubTaskChange = (value: string) => {
+        if (editingSubTask) {
+            setEditingSubTask({
+                ...editingSubTask,
+                title: value
+            });
+        }
     };
     
     useEffect(()=>{
@@ -159,6 +240,60 @@ export default function Task() {
         }
 
     }, [stateSubTaskStatusChange])
+
+    useEffect(()=>{
+        if(stateDeleteTask.status == 'succeeded'){
+            setSnackbar({
+                open: true,
+                message: '¡Tarea eliminada correctamente!',
+                type: 'Success'
+            });
+        }
+
+        if(stateDeleteTask.status == 'failed'){
+            setSnackbar({
+                open: true,
+                message: stateDeleteTask.error || '¡Error al eliminar tarea!',
+                type: 'Error'
+            });
+        }
+    }, [stateDeleteTask])
+
+    useEffect(()=>{
+        if(stateDeleteSubTask.status == 'succeeded'){
+            setSnackbar({
+                open: true,
+                message: '¡Subtarea eliminada correctamente!',
+                type: 'Success'
+            });
+        }
+
+        if(stateDeleteSubTask.status == 'failed'){
+            setSnackbar({
+                open: true,
+                message: stateDeleteSubTask.error || '¡Error al eliminar subtarea!',
+                type: 'Error'
+            });
+        }
+    }, [stateDeleteSubTask])
+
+    useEffect(()=>{
+        if(stateEditSubTask.status == 'succeeded'){
+            setSnackbar({
+                open: true,
+                message: '¡Subtarea editada correctamente!',
+                type: 'Success'
+            });
+        }
+
+        if(stateEditSubTask.status == 'failed'){
+            setSnackbar({
+                open: true,
+                message: stateEditSubTask.error || '¡Error al editar subtarea!',
+                type: 'Error'
+            });
+        }
+    }, [stateEditSubTask])
 
     useEffect(()=>{
 
@@ -229,7 +364,7 @@ export default function Task() {
         dispatch(
             GetAlltask()
         )
-    },[statePostTask, statePutAddSubTask, stateaddCommment,stateTaskStatusChange,stateSubTaskStatusChange])
+    },[statePostTask, statePutAddSubTask, stateaddCommment, stateTaskStatusChange, stateSubTaskStatusChange, stateDeleteTask, stateDeleteSubTask, stateEditSubTask])
 
     useEffect(() => {
         console.log(stateGetAllTask);
@@ -237,7 +372,18 @@ export default function Task() {
             
             console.log(responseGetAllTask);
 
-            const newRows = (responseGetAllTask?.allTask || []).map((task) => {
+            const filteredTasks = selectedValue
+                ? (responseGetAllTask?.allTask || []).filter(task => task.status === selectedValue)
+                : (responseGetAllTask?.allTask || []);
+
+            const searchFilteredTasks = searchValue
+                ? filteredTasks.filter(task =>
+                    task.title?.toLowerCase().includes(searchValue.toLowerCase()) ||
+                    task.description?.toLowerCase().includes(searchValue.toLowerCase())
+                )
+                : filteredTasks;
+
+            const newRows = searchFilteredTasks.map((task) => {
                 return createData(
                     task._id,
                     task.title,
@@ -254,7 +400,7 @@ export default function Task() {
             
             setRows(newRows);
         }
-    },[stateGetAllTask, responseGetAllTask])
+    },[stateGetAllTask, responseGetAllTask, selectedValue, searchValue])
 
     function createData(
     _id?: string,
@@ -360,7 +506,11 @@ export default function Task() {
                                 <TableCell>
                                     <div className='flex gap-3 justify-self-end'>
                                         <FontAwesomeIcon className='w-[1.2rem] cursor-pointer' icon={faPenToSquare} />
-                                        <FontAwesomeIcon className='w-[1.2rem] cursor-pointer' icon={faTrashCan} />
+                                        <FontAwesomeIcon
+                                            className='w-[1.2rem] cursor-pointer'
+                                            icon={faTrashCan}
+                                            onClick={() => handleDeleteTask(row._id)}
+                                        />
                                         <FontAwesomeIcon
                                             className={`w-[1.2rem] cursor-pointer transition-transform duration-300 ${expandedRow === row._id ? 'rotate-180' : ''}`}
                                             icon={faChevronDown}
@@ -380,15 +530,55 @@ export default function Task() {
                                                         <ul className="list-disc pl-5 ">
                                                             {row.subTasks.map((subTask) => (
                                                                 <li key={subTask.id} className="mb-1 list-none">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <CheckboxComponent
-                                                                            checked={subTask.status === 'completada'}
-                                                                            onChange={() => handleSubTaskStatusChange(row._id, subTask.id, subTask.status)}
-                                                                        />
-                                                                        <p>
-                                                                            <StatusChipComponent status={subTask.status} />
-                                                                        </p>
-                                                                        <span>{subTask.title}</span>
+                                                                    <div className="flex items-center gap-2 justify-between">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <CheckboxComponent
+                                                                                checked={subTask.status === 'completada'}
+                                                                                onChange={() => handleSubTaskStatusChange(row._id, subTask.id, subTask.status)}
+                                                                            />
+                                                                            <p>
+                                                                                <StatusChipComponent status={subTask.status} />
+                                                                            </p>
+                                                                            {editingSubTask && editingSubTask.id === subTask.id ? (
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <InputComponent 
+                                                                                        className='w-full'
+                                                                                        placeholder={''}
+                                                                                        name="text" 
+                                                                                        id={'SubTask'} 
+                                                                                        type={'text'}  
+                                                                                        value={editingSubTask.title}
+                                                                                        onChange={(e: string) => { handleEditSubTaskChange(e); }} 
+                                                                                        autoComplete="email"
+                                                                                    />
+                                                                                    <ButtonComponent
+                                                                                        onClick={saveEditSubTask}
+                                                                                    >
+                                                                                        <FontAwesomeIcon className='w-[1.2rem]' icon={faFloppyDisk} />
+                                                                                    </ButtonComponent>
+                                                                                    <ButtonComponent
+                                                                                        onClick={cancelEditSubTask}
+                                                                                        className="bg-gray-500 text-white"
+                                                                                    >
+                                                                                        <FontAwesomeIcon className='w-[1.2rem]' icon={faBan} />
+                                                                                    </ButtonComponent>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <span>{subTask.title}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <FontAwesomeIcon
+                                                                                className="w-[1rem] cursor-pointer text-blue-500"
+                                                                                icon={faPenToSquare}
+                                                                                onClick={() => startEditSubTask(row._id, subTask.id, subTask.status, subTask.title)}
+                                                                            />
+                                                                            <FontAwesomeIcon
+                                                                                className="w-[1rem] cursor-pointer text-red-500"
+                                                                                icon={faTrashCan}
+                                                                                onClick={() => handleDeleteSubTask(row._id, subTask.id)}
+                                                                            />
+                                                                        </div>
                                                                     </div>
                                                                 </li>
                                                             ))}
@@ -409,12 +599,11 @@ export default function Task() {
                                                         value={newSubTask}
                                                         onChange={(e) => { handleInputNewSubTas(e) }} 
                                                     />
-                                                    <button
-                                                        className="bg-[var(--colorSmartNest)] text-white px-4 py-2 rounded-md"
+                                                    <ButtonComponent
                                                         onClick={() => handleAddSubTask(row._id, newSubTask)}
                                                     >
                                                         Agregar
-                                                    </button>
+                                                    </ButtonComponent>
                                                 </div>
                                                
                                             </div>
@@ -449,12 +638,12 @@ export default function Task() {
                                                         rows={4}
                                                         maxLength={200}
                                                     />
-                                                    <button
-                                                        className="bg-[var(--colorSmartNest)] h-[100%] text-white px-4 py-2 rounded-md"
+                                                    <ButtonComponent
+                                                        className="h-[100%]"
                                                         onClick={() => handleAddComment(row._id, newComment, row.userId)}
                                                     >
                                                         Comentar
-                                                    </button>
+                                                    </ButtonComponent>
                                                 </div>
                                                 
                                             </div>

@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { addComment, addNewTask, addSubTask, allTask, changetaskStatusChange, changetaSubTaskStatus } from "../../services/tasks";
+import { addComment, addNewTask, addSubTask, allTask, changetaskStatusChange, changetaSubTaskStatus, deleteSubTask, deleteTask, editSubTask } from "../../services/tasks";
 
 export const PostTask = createAsyncThunk(
     'user/PostTask', 
@@ -80,6 +80,48 @@ export const subTaskStatusChange = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error : 'Error desconocido al Actualizar Tarea'
+      );
+    }
+  }
+);
+
+export const DeleteTask = createAsyncThunk(
+  'user/DeleteTask',
+  async (params: { taskId: string }, { rejectWithValue }) => {
+    try {
+      const response = await deleteTask(params.taskId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error : 'Error desconocido al eliminar tarea'
+      );
+    }
+  }
+);
+
+export const DeleteSubTask = createAsyncThunk(
+  'user/DeleteSubTask',
+  async (params: { taskId: string, subTaskId: string }, { rejectWithValue }) => {
+    try {
+      const response = await deleteSubTask(params.taskId, params.subTaskId);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error : 'Error desconocido al eliminar subtarea'
+      );
+    }
+  }
+);
+
+export const EditSubTask = createAsyncThunk(
+  'user/EditSubTask',
+  async (params: { taskId: string, subTaskId: string, title: string, currentStatus: 'pendiente' | 'completada' }, { rejectWithValue }) => {
+    try {
+      const response = await editSubTask(params.taskId, params.subTaskId, params.title, params.currentStatus);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error : 'Error desconocido al editar subtarea'
       );
     }
   }
