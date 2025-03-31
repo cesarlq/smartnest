@@ -26,9 +26,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (typeof window === 'undefined') {
+        setIsLoading(false);
+        return;
+      }
+      
       try {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
+        const token = window.localStorage.getItem('token');
+        const userData = window.localStorage.getItem('user');
         
         console.log('Token en localStorage:', token);
         console.log('Usuario en localStorage:', userData);
@@ -40,9 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error al verificar autenticación:', error);
-        // Si hay un error, borrar datos de sesión
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('token');
+          window.localStorage.removeItem('user');
+        }
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -86,12 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Borrar datos de sesión
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('user');
+    }
     setUser(null);
-    
-    // Redirigir al login
     router.push('/login');
   };
 

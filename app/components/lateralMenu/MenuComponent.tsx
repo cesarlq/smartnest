@@ -63,12 +63,17 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
         };
     }, []);
     
-    // Verificar la información del usuario en el contexto y localStorage
+    // Verificar la información del usuario en el contexto
     console.log('Usuario del contexto:', user);
-    console.log('Usuario en localStorage:', localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null);
     
-    // Intentar obtener el usuario del localStorage si no está en el contexto
-    const userFromStorage = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null;
+    // Intentar obtener el usuario del localStorage si estamos en el cliente y no está en el contexto
+    let userFromStorage = null;
+    if (typeof window !== 'undefined') {
+        const userStorageData = window.localStorage.getItem('user');
+        console.log('Usuario en localStorage:', userStorageData ? JSON.parse(userStorageData) : null);
+        userFromStorage = userStorageData ? JSON.parse(userStorageData) : null;
+    }
+    
     const userName = user?.name || userFromStorage?.name || 'Usuario';
     const userEmail = user?.email || userFromStorage?.email || 'usuario@example.com';
     
