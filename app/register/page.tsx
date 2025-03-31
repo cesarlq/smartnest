@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import InputComponent from '@/app/components/common/inputComponent'
 import ButtonComponent from '../components/common/buttonComponent';
 import SnackBarComponent, { SnackBarType } from '../components/common/snackBarComponent';
@@ -8,25 +9,35 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerThunk } from '../lib/redux/thunks/register.thunk';
 import { useAppDispatch, useAppSelector } from '../lib/redux/hooks';
+import { RegisterDataI } from '../lib/interfaces/users';
 
 export default function Register() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const stateRegister = useAppSelector((state) => state.authReducer.getregister);
-    const [email, setEmail] = useState('');
-    const [nombre, setNombre] = useState('');
-    const [password, setPassword] = useState('');
-    
-    const [emailError, setEmailError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [nombreError, setNombreError] = useState('')
-    
-    const [isFormValid, setIsFormValid] = useState(false);
+
+    const { 
+        register, 
+        handleSubmit, 
+        formState: { errors }, 
+        setValue, 
+        watch 
+    } = useForm<RegisterDataI>({
+        mode: 'onChange',
+        defaultValues: {
+            nombre: '',
+            email: '',
+            password: ''
+        }
+    });
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         type: 'Error' as SnackBarType
     });
+    const nombreValue = watch('nombre');
+    const emailValue = watch('email');
+    const passwordValue = watch('password');
 
     useEffect(()=>{
 
@@ -49,7 +60,7 @@ export default function Register() {
                 router.push('/home'); // Redireccionar al dashboard
             }, 1500);
         }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[stateRegister]);
 
     const handleCloseSnackbar = () => {
@@ -59,110 +70,45 @@ export default function Register() {
         });
     };
 
-    const handleInputNombre = (data: string) => {
-        setNombre(data);
-        
-        if (!data.trim()) {
-            setNombreError('El nombre es obligatorio');
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/.test(data)) {
-            setNombreError('Ingresa un nombre válido (solo letras y espacios)');
-        } else if (data.trim().length < 2) {
-            setNombreError('El nombre debe tener al menos 2 caracteres');
-        } else {
-            setNombreError('');
-        }
-        
-        validateForm(data, password);
+    const handleInputNombre = (value: string) => {
+        setValue('nombre', value, { 
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true
+        });
     };
 
-    const handleInputEmail = (data: string) => {
-        setEmail(data);
-        
-        if (!data.trim()) {
-            setEmailError('El correo electrónico es obligatorio');
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data)) {
-            setEmailError('Ingresa un correo electrónico válido');
-        } else {
-            setEmailError('');
-        }
-        
-        validateForm(data, password);
+    const handleInputEmail = (value: string) => {
+        setValue('email', value, { 
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true
+        });
     };
     
-    const handleInputPassword = (data: string) => {
-        setPassword(data);
-        
-        if (!data) {
-            setPasswordError('La contraseña es obligatoria');
-        } else if (data.length < 6) {
-            setPasswordError('La contraseña debe tener al menos 6 caracteres');
-        } else {
-            setPasswordError('');
-        }
-        
-        validateForm(email, data);
+    const handleInputPassword = (value: string) => {
+        setValue('password', value, { 
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true
+        });
     };
     
-    const validateForm = (emailValue: string, pass: string) => {
-        const isEmailValid = emailValue.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
-        const isPassValid = pass.length >= 6;
-        
-        setIsFormValid(Boolean(isEmailValid) && Boolean(isPassValid));
-    };
-    
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!isFormValid) {
-            let errorMessage = '';
-            
-            if (!email) {
-                setEmailError('El correo electrónico es obligatorio');
-                errorMessage = 'El correo electrónico es obligatorio';
-            } else if (emailError) {
-                errorMessage = emailError;
-            }
-            
-            if (!password) {
-                setPasswordError('La contraseña es obligatoria');
-                if (!errorMessage) errorMessage = 'La contraseña es obligatoria';
-            } else if (passwordError && !errorMessage) {
-                errorMessage = passwordError;
-            }
-            if(!nombre){
-                setPasswordError('El nombre es obligatorio');
-                if (!errorMessage) errorMessage = 'El nombre es obligatorio';
-            } else if (nombreError && !errorMessage) {
-                errorMessage = nombreError;
-            }
-            
-            // Si hay errores, mostrar en el Snackbar
-            if (errorMessage) {
-                setSnackbar({
-                    open: true,
-                    message: errorMessage,
-                    type: 'Error'
-                });
-            }
-            
-            return;
-        }
-        
+    const onSubmit: SubmitHandler<RegisterDataI> = (data) => {
         dispatch(
             registerThunk({
-                name: nombre,
-                email,
-                password
+                name: data.nombre,
+                email: data.email,
+                password: data.password
             })
         );
     };
-
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-100 p-4">
 
          <div className='w-[30rem] rounded-[1rem] bg-white p-8 shadow-2xl '>
-            <form onSubmit={handleSubmit} className='grid gap-[1rem]'>
+            <form onSubmit={handleSubmit(onSubmit)} className='grid gap-[1rem]'>
 
                 <div className='w-full text-center grid gap-[.5rem]'>
                     <h1 className='text-[var(--colorSmartNest)]'>SmartNest Spa</h1>
@@ -185,46 +131,68 @@ export default function Register() {
                         <InputComponent 
                             className='w-full'
                             placeholder="Nombre Completo" 
-                            name="nombre" 
                             id={'nombre'} 
                             type={'text'}  
-                            onChange={(e: string) => { handleInputNombre(e); }} 
+                            onChange={handleInputNombre} 
                             autoComplete="nombre"
-                            value={nombre}
-                            error={!!nombreError}
-                            helperText={nombreError}
+                            value={nombreValue}
+                            error={!!errors.nombre}
+                            helperText={errors.nombre?.message}
+                            name={register('nombre', {
+                                required: 'El nombre es obligatorio',
+                                minLength: {
+                                    value: 2,
+                                    message: 'El nombre debe tener al menos 2 caracteres'
+                                },
+                                pattern: {
+                                    value: /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/,
+                                    message: 'Ingresa un nombre válido (solo letras y espacios)'
+                                }
+                            }).name}
                         />
                     </div>
                      <div>
                         <InputComponent 
                             className='w-full'
                             placeholder="Correo electrónico" 
-                            name="email" 
                             id={'email'} 
                             type={'email'}  
-                            onChange={(e: string) => { handleInputEmail(e); }} 
+                            onChange={handleInputEmail} 
                             autoComplete="email"
-                            value={email}
-                            error={!!emailError}
-                            helperText={emailError}
+                            value={emailValue}
+                            error={!!errors.email}
+                            helperText={errors.email?.message}
+                            name={register('email', {
+                                required: 'El correo electrónico es obligatorio',
+                                pattern: {
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: 'Ingresa un correo electrónico válido'
+                                }
+                            }).name}
                         />
                     </div>
                     <div>
                         <InputComponent 
                             className='w-full'
                             placeholder="Contraseña" 
-                            name="password" 
                             id={'password'} 
                             type={'password'}  
-                            onChange={(e: string) => { handleInputPassword(e); }} 
+                            onChange={handleInputPassword} 
                             autoComplete="current-password"
-                            value={password}
-                            error={!!passwordError}
-                            helperText={passwordError}
+                            value={passwordValue}
+                            error={!!errors.password}
+                            helperText={errors.password?.message}
+                            name={register('password', {
+                                required: 'La contraseña es obligatoria',
+                                minLength: {
+                                    value: 6,
+                                    message: 'La contraseña debe tener al menos 6 caracteres'
+                                }
+                            }).name}
                         />
                     </div>
                     
-                    <ButtonComponent>
+                    <ButtonComponent disabled={false}>
                         {stateRegister.status == 'loading' ? 'PROCESANDO...' : 'REGISTRATE'}
                     </ButtonComponent>
 

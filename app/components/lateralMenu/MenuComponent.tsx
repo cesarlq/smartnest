@@ -92,6 +92,7 @@ export default function MenuComponent({children}: {children:React.ReactNode}) {
                         <h1 className="text-xl font-medium text-gray-800">SmartNest Spa</h1>
                     </div>
                     <ButtonComponent
+                        disabled={false}
                         onClick={handleAddTask}
                         className="inline-flex items-center px-4 py-2 "
                     >

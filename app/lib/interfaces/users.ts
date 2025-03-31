@@ -22,3 +22,28 @@ export interface ResponseuserI {
     name: string
   }
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface LoginCredentialsI {
+  email: string;
+  password: string;
+}
+
+export interface RegisterDataI {
+  nombre: string;
+  email: string;
+  password: string;
+}

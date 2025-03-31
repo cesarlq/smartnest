@@ -10,11 +10,12 @@ import CheckboxComponent from '@/app/components/common/checkboxComponent';
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, useMediaQuery } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/app/lib/redux/hooks';
 import { addCommment, DeleteSubTask, DeleteTask, EditSubTask, GetAlltask, PutAddSubTask, subTaskStatusChange, taskStatusChange } from '@/app/lib/redux/thunks/task.thunk';
-import { SubTask, User, Comment } from '@/app/lib/interfaces/taskInterface';
+import { SubTask, Comment } from '@/app/lib/interfaces/taskInterface';
 import InputComponent from '@/app/components/common/inputComponent';
 import SnackBarComponent, { SnackBarType } from '@/app/components/common/snackBarComponent';
 import TextAreaComponent from '@/app/components/common/textAreaComponent';
 import ButtonComponent from '@/app/components/common/buttonComponent';
+import { User } from '@/app/lib/interfaces/users';
 
 export default function Task() {
     const dispatch = useAppDispatch();
@@ -366,6 +367,7 @@ export default function Task() {
         dispatch(
             GetAlltask()
         )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     },[statePostTask, statePutAddSubTask, stateaddCommment, stateTaskStatusChange, stateSubTaskStatusChange, stateDeleteTask, stateDeleteSubTask, stateEditSubTask])
 
     useEffect(() => {
@@ -585,12 +587,14 @@ export default function Task() {
                                                                                             />
                                                                                             <div className={`${isMobile ? 'flex mt-2' : 'flex'} gap-2`}>
                                                                                                 <ButtonComponent
+                                                                                                    disabled={false}
                                                                                                     onClick={saveEditSubTask}
                                                                                                     className={isMobile ? 'flex-1' : ''}
                                                                                                 >
                                                                                                     <FontAwesomeIcon className='w-[1.2rem]' icon={faFloppyDisk} />
                                                                                                 </ButtonComponent>
                                                                                                 <ButtonComponent
+                                                                                                    disabled={false}
                                                                                                     onClick={cancelEditSubTask}
                                                                                                     className={`bg-gray-500 text-white ${isMobile ? 'flex-1' : ''}`}
                                                                                                 >
@@ -635,6 +639,7 @@ export default function Task() {
                                                                 onChange={(e) => { handleInputNewSubTas(e) }} 
                                                             />
                                                             <ButtonComponent
+                                                                disabled={false}
                                                                 className={isMobile ? 'mt-2 w-full' : ''}
                                                                 onClick={() => handleAddSubTask(row._id, newSubTask)}
                                                             >
@@ -676,6 +681,7 @@ export default function Task() {
                                                                 maxLength={200}
                                                             />
                                                             <ButtonComponent
+                                                                disabled={false}
                                                                 className={isMobile ? 'mt-2 w-full' : 'h-[100%]'}
                                                                 onClick={() => handleAddComment(row._id, newComment, row.userId)}
                                                             >

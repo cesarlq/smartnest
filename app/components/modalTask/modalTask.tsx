@@ -46,6 +46,7 @@ export default function ModalTask({onCancel}:{onCancel: () => void;}) {
       }, 1500);
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   },[statePostTask])
 
   const handleTitleChange = (value: string) => {

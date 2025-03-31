@@ -1,3 +1,4 @@
+import { User } from "./users"
 
 
 export interface InitialStateTaskI {
@@ -87,11 +88,7 @@ export interface responseEditTaskI {
     updatedTask?: TaskI
 }
 
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-}
+
 
 export interface Comment {
     id: string;
@@ -132,21 +129,3 @@ export interface TaskFilter {
     sortOrder?: 'asc' | 'desc';
 }
 
-export interface AuthState {
-    isAuthenticated: boolean;
-    user: User | null;
-    token: string | null;
-    loading: boolean;
-    error: string | null;
-}
-
-export interface LoginCredentials {
-    email: string;
-    password: string;
-}
-
-export interface RegisterData {
-    name: string;
-    email: string;
-    password: string;
-}
