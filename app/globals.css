@@ -3,6 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --colorSmartNest: #009689;
+  --roundedGlobal: .3rem;
+
+  --bgError: #F44336bf;
+  --bgWarning: #FF9800bf;
+  --bgSuccess: #4CAF50bf;
+  --bgInfo:#2196F3bf;
+
+  --colorError: #FFFFFF;
+  --colorWarning: #000000;
+  --colorSuccess: #FFFFFF;
+  --colorInfo:#FFFFFF;
+
+  --colorText: #494949;
 }
 
 @theme inline {
@@ -15,7 +29,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: #e3e3e3;
   }
 }
 
@@ -23,4 +37,38 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  color:#494949;
 }
+
+body h1 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+body p {
+  font-size: .8rem;
+}
+
+body a {
+  color: var(--colorSmartNest);
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  body h1 {
+    font-size: 1.8rem;
+  }
+  body p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body h1 {
+    font-size: 1.5rem;
+  }
+  body p {
+    font-size: 0.8rem;
+  }
+}
+
